@@ -1,78 +1,25 @@
-from sklearn.datasets import load_breast_cancer, load_iris, load_wine
+from sklearn.datasets import fetch_openml
 from matplotlib import pyplot as plt
 from sklearn.model_selection import train_test_split
+from Generator import accuracy_score
+import numpy as np
+import pandas as pd
 from QDA import QDA
 from LDA import LDA
 from NB import NB
-import numpy as np
-import pandas as pd
-from Generator import accuracy_score
-
-def data_simulation():
-    all_results = {}
-
-    datasets = {
-        "BreastCancer": load_dataset_breast_cancer,
-        "Iris (2-class)": load_dataset_iris_binary,
-        "Wine (2-class)": load_dataset_wine_binary
-    }
-
-    for dataset_name, loader in datasets.items():
-        X, y = loader()
-        df_results = compare_methods(X, y, n_splits=20, test_size=0.3)
-        all_results[dataset_name] = df_results
-
-    fig, axs = plt.subplots(nrows=1, ncols=3, figsize=(12, 4), sharey=True)
-
-    for i, (dataset_name, df_results) in enumerate(all_results.items()):
-        ax = axs[i]
-        df_results.boxplot(column="Accuracy", by="Method", ax=ax, grid=False)
-        ax.set_title(dataset_name)
-        ax.set_xlabel("")  # remove "Method" text
-        if i == 0:
-            ax.set_ylabel("Accuracy")
-        else:
-            ax.set_ylabel("")
-
-    plt.suptitle("")
-    plt.tight_layout()
-
-    plt.savefig("BayesianReal.pdf")
-    plt.close()
-    print("Saved boxplots to BayesianReal.pdf")
+from sklearn.preprocessing import LabelEncoder
 
 
-def load_dataset_breast_cancer():
-    data = load_breast_cancer()
-    X = data['data']
-    y = data['target']
-    return X, y
+def load_openml_dataset(data_id):
+    data = fetch_openml(data_id=data_id, as_frame=False)
+    X = data.data
+    y = data.target
 
-def load_dataset_iris_binary():
-    data = load_iris()
-    X = data['data']
-    y = data['target']
+    le = LabelEncoder()
+    y_encoded = le.fit_transform(y)
 
-    mask = (y != 2)
-    X = X[mask]
-    y = y[mask]
+    return X, y_encoded
 
-    return X, y
-
-def load_dataset_wine_binary():
-    data = load_wine()
-    X = data['data']
-    y = data['target']
-    mask = (y != 2)
-    X = X[mask]
-    y = y[mask]
-    return X, y
-
-datasets = {
-    "BreastCancer": load_dataset_breast_cancer,
-    "Iris (2-class)": load_dataset_iris_binary,
-    "Wine (2-class)": load_dataset_wine_binary
-}
 
 def compare_methods(X, y, n_splits=20, test_size=0.3, random_seed=123):
     results = []
@@ -82,6 +29,7 @@ def compare_methods(X, y, n_splits=20, test_size=0.3, random_seed=123):
         X_train, X_test, y_train, y_test = train_test_split(
             X, y, test_size=test_size, random_state=np.random.randint(1e9)
         )
+
         lda = LDA()
         lda.fit(X_train, y_train)
         acc_lda = accuracy_score(y_test, lda.predict(X_test))
@@ -99,3 +47,35 @@ def compare_methods(X, y, n_splits=20, test_size=0.3, random_seed=123):
 
     df = pd.DataFrame(results, columns=["Method", "Accuracy"])
     return df
+
+
+def data_simulation():
+    datasets = {
+        "OpenML 995": lambda: load_openml_dataset(995),
+        "OpenML 979": lambda: load_openml_dataset(979),
+        "OpenML 847": lambda: load_openml_dataset(847),
+    }
+
+    all_results = {}
+
+    for dataset_name, loader in datasets.items():
+        X, y = loader()
+        df_results = compare_methods(X, y, n_splits=20, test_size=0.3)
+        all_results[dataset_name] = df_results
+
+    fig, axs = plt.subplots(nrows=1, ncols=3, figsize=(12, 4), sharey=True)
+
+    for i, (dataset_name, df_results) in enumerate(all_results.items()):
+        ax = axs[i]
+        df_results.boxplot(column="Accuracy", by="Method", ax=ax, grid=False)
+        ax.set_title(dataset_name)
+        ax.set_xlabel("")
+        if i == 0:
+            ax.set_ylabel("Accuracy")
+        else:
+            ax.set_ylabel("")
+
+    plt.suptitle("")
+    plt.tight_layout()
+    plt.savefig("BayesianReal.pdf")
+    plt.close()
