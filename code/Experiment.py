@@ -1,4 +1,5 @@
 import pandas as pd
+from sklearn.model_selection import train_test_split
 from Generator import generate_data, accuracy_score
 from LDA import LDA
 from QDA import QDA
@@ -6,7 +7,7 @@ from NB import NB
 import numpy as np
 
 
-def run_experiments_scheme(scheme, vary='a', values=None, n_splits=20):
+def run_experiments_scheme(scheme, vary='a', values=None, n_splits=25):
     results = {
         'LDA': {val: [] for val in values},
         'QDA': {val: [] for val in values},
@@ -21,15 +22,10 @@ def run_experiments_scheme(scheme, vary='a', values=None, n_splits=20):
             else:
                 X, y = generate_data(scheme, n=1000, a=2.0, rho=val)
 
-            # Now do train/test split
-            indices = np.arange(X.shape[0])
-            np.random.shuffle(indices)
-            train_size = 700
-            train_idx = indices[:train_size]
-            test_idx = indices[train_size:]
-
-            X_train, y_train = X[train_idx], y[train_idx]
-            X_test, y_test = X[test_idx], y[test_idx]
+            # train/test split
+            X_train, X_test, y_train, y_test = train_test_split(
+                X, y, test_size=0.3, random_state=np.random.randint(1e9)
+            )
 
             # Fit and evaluate LDA
             lda = LDA()
