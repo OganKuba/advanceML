@@ -21,7 +21,7 @@ def load_openml_dataset(data_id):
     return X, y_encoded
 
 
-def compare_methods(X, y, n_splits=20, test_size=0.3, random_seed=123):
+def compare_methods(X, y, n_splits=25, test_size=0.3, random_seed=123):
     results = []
     np.random.seed(random_seed)
 
@@ -51,16 +51,16 @@ def compare_methods(X, y, n_splits=20, test_size=0.3, random_seed=123):
 
 def data_simulation():
     datasets = {
-        "OpenML 995": lambda: load_openml_dataset(995),
-        "OpenML 979": lambda: load_openml_dataset(979),
-        "OpenML 847": lambda: load_openml_dataset(847),
+        "OpenML 995 - mfeat-zernike": lambda: load_openml_dataset(995),
+        "OpenML 979 - waveform-5000": lambda: load_openml_dataset(979),
+        "OpenML 847 - wind": lambda: load_openml_dataset(847),
     }
 
     all_results = {}
 
     for dataset_name, loader in datasets.items():
         X, y = loader()
-        df_results = compare_methods(X, y, n_splits=20, test_size=0.3)
+        df_results = compare_methods(X, y, n_splits=25, test_size=0.3)
         all_results[dataset_name] = df_results
 
     fig, axs = plt.subplots(nrows=1, ncols=3, figsize=(12, 4), sharey=True)

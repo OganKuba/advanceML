@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
 
-def boxplot_results(results, parameter_name, filename):
+def boxplot_results(results, parameter_name, filename=None):
     methods = sorted(results.keys())
     param_values = sorted(list(results[methods[0]].keys()))
 
@@ -56,7 +56,8 @@ def boxplot_results(results, parameter_name, filename):
     ax.legend(handles=legend_elements, loc='best')
 
     plt.tight_layout()
-    plt.savefig(filename)
-    plt.close()
+    if filename is not None:
+        plt.savefig(filename)
+        plt.close()
 
 
